@@ -1,7 +1,7 @@
 import prisma from "../utils/prisma";
 
 export class OperationRepository {
-  async logOperation(data: {
+  async createOperation(data: {
     boardId: string;
     userId?: string;
     type: string;

@@ -13,7 +13,7 @@ export class ElementRepository {
     return prisma.element.create({ data });
   }
 
-  async getElementsByBoard(boardId: string) {
+  async getElements(boardId: string) {
     return prisma.element.findMany({ where: { boardId } });
   }
 
