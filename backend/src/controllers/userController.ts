@@ -1,5 +1,6 @@
 import {Request,Response} from 'express'
 import { UserService } from '../services/UserService';
+import { AuthRequst } from "../middleware/authMiddleware";
 
 export class UserController{
        
@@ -45,4 +46,23 @@ export class UserController{
       res.status(500).json({ error: err.message });
     }
   };
+
+        async getMe(req: AuthRequst, res: Response) {
+    try {
+      const userId = req.user?.id  ; // added by authMiddleware
+      
+      if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' });
+      const user = await this.userServ.getUserById(userId);
+
+      return res.json({
+        success: true,
+        user,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to fetch user",
+      });
+    }
+  }
 }

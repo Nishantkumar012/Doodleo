@@ -1,5 +1,6 @@
 
 import { error } from "console";
+import jwt from 'jsonwebtoken'
 import { UserRepository } from "../repositories/UserRepository";
 import bcrypt from 'bcryptjs';
 
@@ -14,36 +15,43 @@ export class UserService {
            this.userRepo = new UserRepository();
        }
 
-
-       async registerUser(data: { name: string; email:string, password:string}){
-           
-          const existingUser = await this.userRepo.findByEmail(data.email);
-
-            if(existingUser) throw new Error("Email already exists");
-
-            const hashedPassword = await bcrypt.hash(data.password, 10);
-
-            return this.userRepo.create({
-              name: data.name,
-              email: data.email,
-              password: hashedPassword,
-            })
-       }
+         private generateToken(id: string) {
+    return jwt.sign({ id }, process.env.JWT_SECRET!, {
+      expiresIn: "7d",
+    });
+  }
 
 
 
-       async loginUser(email: string, password: string){
-           
-           const user = await this.userRepo.findByEmail(email);
+     async registerUser(data: { name: string; email: string; password: string }) {
+    const existing = await this.userRepo.findByEmail(data.email);
+    if (existing) throw new Error("Email already exists");
 
-            if(!user) throw new Error("User not found");
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
-            const isMatch = await bcrypt.compare(password,user.password);
+    const user = await this.userRepo.create({
+      name: data.name,
+      email: data.email,
+      password: hashedPassword,
+    });
 
-            if(!isMatch) throw new Error("Invalid password");
+    const token = this.generateToken(user.id);
 
-            return user;
-       }
+    return { user, token };
+  }
+
+
+       async loginUser(email: string, password: string) {
+    const user = await this.userRepo.findByEmail(email);
+    if (!user) throw new Error("User not found");
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) throw new Error("Invalid password");
+
+    const token = this.generateToken(user.id);
+
+    return { user, token };
+  }
 
 
        async getUserById(id: string){
